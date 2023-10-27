@@ -39,12 +39,6 @@ on:
         required: true
       VAULT_TOKEN:
         required: true
-      PROD_DOCKER_REGISTRY_URL:
-        required: true
-      PROD_GCP_CREDENTIALS:
-        required: true
-      PROD_PROJECT_ID:
-        required: true
 
 jobs:
   build-test:
@@ -96,24 +90,6 @@ jobs:
           file: ./builds/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }}
-          build-args: |
-            "GITHUB_USERNAME=${{ secrets.GITHUBACTION_USERNAME }}"
-            "GITHUB_TOKEN=${{ secrets.GITHUBACTION_TOKEN }}"
-
-      - name: Login to PROD GAR
-        uses: docker/login-action@v2
-        with:
-          registry: ${{ secrets.PROD_DOCKER_REGISTRY_URL }}
-          username: _json_key
-          password: ${{ secrets.PROD_GCP_CREDENTIALS }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          file: ./builds/Dockerfile
-          push: true
-          tags: ${{ secrets.PROD_DOCKER_REGISTRY_URL }}/${{ secrets.PROD_PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }}
           build-args: |
             "GITHUB_USERNAME=${{ secrets.GITHUBACTION_USERNAME }}"
             "GITHUB_TOKEN=${{ secrets.GITHUBACTION_TOKEN }}"
