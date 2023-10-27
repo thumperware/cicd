@@ -1,0 +1,14 @@
+environment:
+domain:
+srvName:
+httpPort: 8080
+imagePullPolicy: Always
+database_url:
+dockerImage:
+globalStaticIpName:
+vault_addr:
+vault_token:
+
+# Always: pull from docker hub
+# Never: pull from local docker registry(if you use minikube you need to run `eval $(minikube docker-env)` command in every console you try to deploy local image to minikube and it only apply to that console and is not system wide)
+# helm install --set version=$GITVERSIONNUMBER ... or helm install --set version=$(gitversion /output json /showvariable SemVer) ...

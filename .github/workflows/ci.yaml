@@ -1,0 +1,45 @@
+name: CI workflow
+
+on:
+  workflow_call:
+    secrets:
+      GITHUBACTION_TOKEN:
+        required: true
+      GITHUBACTION_USERNAME:
+        required: true
+      DOMAIN_NAME:
+        required: true
+
+jobs:
+  build-test:
+    name: Build and Unit Tests
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: on
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure git for private modules
+        env:
+          TOKEN: ${{ secrets.GITHUBACTION_TOKEN }}
+          GOPRIVATE: github.com/${{ secrets.DOMAIN_NAME }}
+        run: git config --global url."https://${{ secrets.GITHUBACTION_USERNAME }}:${{ secrets.GITHUBACTION_TOKEN }}@github.com".insteadOf "https://github.com"
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.21"
+
+      - name: Install Gosec Security Scanner
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@v2.17.0
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run Gosec Security Scanner
+        run: gosec ./...
+
+      - name: Test
+        run: go test -v ./...

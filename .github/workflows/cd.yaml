@@ -1,0 +1,229 @@
+name: CD workflow
+
+on:
+  workflow_call:
+    secrets:
+      PROJECT_ID:
+        required: true
+      DOCKER_REGISTRY_URL:
+        required: true
+      MIGRATION_DATABASE_INSTANCE_URL:
+        required: true
+      DATABASE_INSTANCE_URL:
+        required: true
+      GCP_DB_INSTANCE_NAME:
+        required: true
+      DB_NAME:
+        required: true
+      GCP_CREDENTIALS:
+        required: true
+      GKE_CLUSTER_NAME:
+        required: true
+      GKE_ZONE:
+        required: true
+      GITHUBACTION_TOKEN:
+        required: true
+      GITHUBACTION_USERNAME:
+        required: true
+      DEPLOYMENT_REPO:
+        required: true
+      ENVIRONMENT:
+        required: true
+      DOMAIN_NAME:
+        required: true
+      SERVICE_NAME:
+        required: true
+      GLOBAL_STATIC_IP_NAME:
+        required: true
+      VAULT_ADDR:
+        required: true
+      VAULT_TOKEN:
+        required: true
+      PROD_DOCKER_REGISTRY_URL:
+        required: true
+      PROD_GCP_CREDENTIALS:
+        required: true
+      PROD_PROJECT_ID:
+        required: true
+
+jobs:
+  build-test:
+    name: Build and Unit Tests
+    uses: ./.github/workflows/ci.yaml
+    secrets:
+      GITHUBACTION_TOKEN: ${{ secrets.GITHUBACTION_TOKEN }}
+      GITHUBACTION_USERNAME: ${{ secrets.GITHUBACTION_USERNAME }}
+      DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+
+  docker-image-push:
+    name: Create docker image and push to registry
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+        # https://github.com/GitTools/actions/tree/main/docs/examples/github/gitversion
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: "5.x"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+
+      # https://github.com/docker/build-push-action
+      - name: Docker setup QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Docker setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GAR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY_URL }}
+          username: _json_key
+          password: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./builds/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }}
+          build-args: |
+            "GITHUB_USERNAME=${{ secrets.GITHUBACTION_USERNAME }}"
+            "GITHUB_TOKEN=${{ secrets.GITHUBACTION_TOKEN }}"
+
+      - name: Login to PROD GAR
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.PROD_DOCKER_REGISTRY_URL }}
+          username: _json_key
+          password: ${{ secrets.PROD_GCP_CREDENTIALS }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./builds/Dockerfile
+          push: true
+          tags: ${{ secrets.PROD_DOCKER_REGISTRY_URL }}/${{ secrets.PROD_PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }}
+          build-args: |
+            "GITHUB_USERNAME=${{ secrets.GITHUBACTION_USERNAME }}"
+            "GITHUB_TOKEN=${{ secrets.GITHUBACTION_TOKEN }}"
+
+  db_migration:
+    name: Database migration
+    needs: docker-image-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install PSQL-CLI
+        run: |
+          sudo apt-get install -y postgresql-client
+      # Use this when latest ubuntu distro supports it
+      # - name: Install Go migrate
+      #   run: |
+      #     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+      #     sudo su -c "echo 'deb https://packagecloud.io/golang-migrate/migrate/ubuntu/ $(lsb_release -sc) main' >> /etc/apt/sources.list.d/migrate.list"
+      #     sudo apt-get update
+      #     sudo apt-get install -y migrate
+
+      - name: Install Go migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.16.0/migrate.linux-amd64.deb --output go-migrate.deb
+          sudo apt-get install -y ./go-migrate.deb
+
+      - name: Setup Cloud SQL Auth Proxy
+        uses: mattes/gce-cloudsql-proxy-action@v1
+        with:
+          creds: ${{ secrets.GCP_CREDENTIALS }}
+          instance: ${{ secrets.GCP_DB_INSTANCE_NAME }}
+
+      - name: Run Migration
+        run: |
+          psql "${{ secrets.MIGRATION_DATABASE_INSTANCE_URL }}/postgres" -tc "select 1 from pg_database where datname='${{ secrets.DB_NAME }}';" | grep -q 1 || psql "${{ secrets.MIGRATION_DATABASE_INSTANCE_URL }}/postgres" -c "CREATE DATABASE \"${{ secrets.DB_NAME }}\""
+          migrate -path ./deployments/migrations -database "${{ secrets.MIGRATION_DATABASE_INSTANCE_URL }}/${{ secrets.DB_NAME }}?sslmode=disable" -verbose up
+
+  deploy-staging:
+    name: Deploy to staging
+    needs: [docker-image-push, db_migration]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # https://github.com/GitTools/actions/tree/main/docs/examples/github/gitversion
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: "5.x"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+
+      - id: "auth"
+        name: "Setup GC Auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - id: "get-credentials"
+        name: "Setup GKE Credentials"
+        uses: "google-github-actions/get-gke-credentials@v1"
+        with:
+          cluster_name: "${{ secrets.GKE_CLUSTER_NAME }}"
+          location: "${{ secrets.GKE_ZONE }}"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Checkout deployment repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ secrets.DEPLOYMENT_REPO }}
+          token: ${{ secrets.GITHUBACTION_TOKEN }}
+          path: cicd
+
+      - name: Deploy
+        run: |
+          helm upgrade --set environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},globalStaticIpName=${{ secrets.GLOBAL_STATIC_IP_NAME }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/serviceDeployments;
+
+  tag-release:
+    name: Tag the release
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: "5.x"
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+
+      - uses: actions-ecosystem/action-push-tag@v1
+        with:
+          tag: v${{ steps.gitversion.outputs.semVer }}
