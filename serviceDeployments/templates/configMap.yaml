@@ -5,4 +5,4 @@ metadata:
 data:
   environment: {{ .Values.environment }}
   domain: {{ .Values.domain }}
-  service: {{ .Values.srvName }
+  service: {{ .Values.srvName }}
