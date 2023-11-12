@@ -1,0 +1,12 @@
+gcpServiceAccount:
+environment:
+domain:
+srvName:
+imagePullPolicy: Always
+dockerImage:
+vault_addr:
+vault_token:
+
+# Always: pull from docker hub
+# Never: pull from local docker registry(if you use minikube you need to run `eval $(minikube docker-env)` command in every console you try to deploy local image to minikube and it only apply to that console and is not system wide)
+# helm install --set version=$GITVERSIONNUMBER ... or helm install --set version=$(gitversion /output json /showvariable SemVer) ...

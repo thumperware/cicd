@@ -1,0 +1,56 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    iam.gke.io/gcp-service-account: {{ .Values.gcpServiceAccount }}
+  name: {{ .Values.srvName }}-service-account
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.srvName }}-job
+  labels:
+    app: {{ .Values.srvName }}
+spec:
+  ttlSecondsAfterFinished: 300
+  selector:
+    matchLabels:
+      app: {{ .Values.srvName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.srvName }}
+    spec:
+      containers:
+      - name: {{ .Values.srvName }}
+        image: {{ .Values.dockerImage }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        env:
+        - name: VAULT_ADDR
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.srvName }}-secret
+              key: vault_addr
+        - name: VAULT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.srvName }}-secret
+              key: vault_token
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.srvName }}-configmap
+              key: environment
+        - name: DOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.srvName }}-configmap
+              key: domain
+        - name: SERVICE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ .Values.srvName }}-configmap
+              key: service
+      restartPolicy: OnFailure
+      serviceAccountName: {{ .Values.srvName }}-service-account
