@@ -14,9 +14,6 @@ metadata:
     app: {{ .Values.srvName }}
 spec:
   ttlSecondsAfterFinished: 300
-  selector:
-    matchLabels:
-      app: {{ .Values.srvName }}
   template:
     metadata:
       labels:

@@ -18,15 +18,12 @@ spec:
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 1
   concurrencyPolicy: Forbid
-  selector:
-    matchLabels:
-      app: {{ .Values.srvName }}
   jobTemplate:
-    metadata:
-      labels:
-        app: {{ .Values.srvName }}
     spec:
       template:
+        metadata:
+          labels:
+            app: {{ .Values.srvName }}
         spec:
           containers:
           - name: {{ .Values.srvName }}
