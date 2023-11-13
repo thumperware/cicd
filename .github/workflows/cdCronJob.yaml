@@ -57,7 +57,7 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0
         with:
-          versionSpec: "5.x"
+          versionSpec: '5.x'
 
       - name: Determine Version
         id: gitversion
@@ -102,24 +102,24 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0
         with:
-          versionSpec: "5.x"
+          versionSpec: '5.x'
 
       - name: Determine Version
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0
 
-      - id: "auth"
-        name: "Setup GC Auth"
-        uses: "google-github-actions/auth@v1"
+      - id: 'auth'
+        name: 'Setup GC Auth'
+        uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
-      - id: "get-credentials"
-        name: "Setup GKE Credentials"
-        uses: "google-github-actions/get-gke-credentials@v1"
+      - id: 'get-credentials'
+        name: 'Setup GKE Credentials'
+        uses: 'google-github-actions/get-gke-credentials@v1'
         with:
-          cluster_name: "${{ secrets.GKE_CLUSTER_NAME }}"
-          location: "${{ secrets.GKE_ZONE }}"
+          cluster_name: '${{ secrets.GKE_CLUSTER_NAME }}'
+          location: '${{ secrets.GKE_ZONE }}'
 
       - name: Install Helm
         uses: azure/setup-helm@v3
@@ -133,7 +133,7 @@ jobs:
 
       - name: Deploy
         run: |
-          helm upgrade --set gcpServiceAccount=${{ secrets.GCP_SA }},schedule=${{ secrets.SCHEDULE }},environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/cronJobDeployments;
+          helm upgrade --set gcpServiceAccount=${{ secrets.GCP_SA }},schedule='${{ secrets.SCHEDULE }}',environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/cronJobDeployments;
 
   tag-release:
     name: Tag the release
@@ -148,7 +148,7 @@ jobs:
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0
         with:
-          versionSpec: "5.x"
+          versionSpec: '5.x'
 
       - name: Determine Version
         id: gitversion
