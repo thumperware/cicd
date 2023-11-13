@@ -133,7 +133,7 @@ jobs:
 
       - name: Deploy
         run: |
-          helm upgrade --set gcpServiceAccount=${{ secrets.GCP_SA }},schedule=${{ secrets.SCHEDULE }},environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/jobDeployments;
+          helm upgrade --set gcpServiceAccount=${{ secrets.GCP_SA }},schedule=${{ secrets.SCHEDULE }},environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/cronJobDeployments;
 
   tag-release:
     name: Tag the release
