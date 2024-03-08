@@ -35,7 +35,7 @@ metadata:
     release: {{ .Release.Name }}
 spec:
   selector:
-    istio: ingressgateway
+    istio: ingress
   servers:
   - port:
       number: 80
