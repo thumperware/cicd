@@ -5,7 +5,6 @@ httpPort: 8080
 imagePullPolicy: Always
 database_url:
 dockerImage:
-globalStaticIpName:
 vault_addr:
 vault_token:
 

@@ -176,7 +176,7 @@ jobs:
 
       - name: Deploy
         run: |
-          helm upgrade --set environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},globalStaticIpName=${{ secrets.GLOBAL_STATIC_IP_NAME }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/serviceDeployments;
+          helm upgrade --set environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/serviceDeployments;
 
   tag-release:
     name: Tag the release
