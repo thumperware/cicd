@@ -33,8 +33,6 @@ on:
         required: true
       SERVICE_NAME:
         required: true
-      GLOBAL_STATIC_IP_NAME:
-        required: true
       VAULT_ADDR:
         required: true
       VAULT_TOKEN:
