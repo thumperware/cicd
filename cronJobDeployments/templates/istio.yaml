@@ -14,7 +14,6 @@ spec:
     - destination:
         host: {{ .Values.srvName }} 
         subset: release
-      weight: {{ .Values.releaseWeight }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule

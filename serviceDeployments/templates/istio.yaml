@@ -14,7 +14,6 @@ spec:
     - destination:
         host: {{ .Values.srvName }} 
         subset: release
-      weight: {{ .Values.releaseWeight }}
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
@@ -41,5 +40,11 @@ spec:
       number: 80
       name: http
       protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
     hosts:
     - "*"
