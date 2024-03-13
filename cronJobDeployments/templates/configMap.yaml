@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.srvName }}-configmap
+  name: {{ .Values.domain }}-{{ .Values.srvName }}-configmap
 data:
   environment: {{ .Values.environment }}
   domain: {{ .Values.domain }}
