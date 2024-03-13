@@ -9,7 +9,7 @@ metadata:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ .Values.domain }}-{{ .Values.srvName }}-job
+  name: {{ .Values.domain }}-{{ .Values.srvName }}
   labels:
     app: {{ .Values.domain }}-{{ .Values.srvName }}
 spec:
