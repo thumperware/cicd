@@ -1,37 +1,37 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: {{ .Values.srvName }} 
+  name: {{ .Values.srvName }}-vs
   labels:
-    release: {{ .Release.Name }}
+    release: {{ .Values.srvName }}-vs
 spec:
   hosts:
-    - "*"
+    - {{ .Values.domain}}/{{ .Values.srvName }}/*
   gateways:
-    - {{ .Values.srvName }} 
+    - {{ .Values.srvName }}-gw
   http:
   - route:
     - destination:
-        host: {{ .Values.srvName }} 
+        host: {{ .Values.srvName }}-dr
         subset: release
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: {{ .Values.srvName }} 
+  name: {{ .Values.srvName }}-dr
   labels:
-    release: {{ .Release.Name }}
+    release: {{ .Values.srvName }}-dr
 spec:
-  host: {{ .Values.srvName }} 
+  host: {{ .Values.srvName }}-dr
   subsets:
   - name: release
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: {{ .Values.srvName }} 
+  name: {{ .Values.srvName }}-gw
   labels:
-    release: {{ .Release.Name }}
+    release: {{ .Values.srvName }}-gw
 spec:
   selector:
     istio: ingressgateway
@@ -44,4 +44,4 @@ spec:
       mode: SIMPLE
       credentialName: cacerts
     hosts:
-    - "*"
+    - {{ .Values.domain}}/{{ .Values.srvName }}/*
