@@ -1,37 +1,37 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: {{ .Values.srvName }} 
+  name: {{ .Values.domain }}-{{ .Values.srvName }}
   labels:
-    release: {{ .Values.srvName }}
+    release: {{ .Values.domain }}-{{ .Values.srvName }}
 spec:
   hosts:
     - "*"
   gateways:
-    - {{ .Values.srvName }} 
+    - {{ .Values.domain }}-{{ .Values.srvName }}
   http:
   - route:
     - destination:
-        host: {{ .Values.srvName }} 
+        host: {{ .Values.domain }}-{{ .Values.srvName }}
         subset: release
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: {{ .Values.srvName }} 
+  name: {{ .Values.domain }}-{{ .Values.srvName }}
   labels:
-    release: {{ .Values.srvName }}
+    release: {{ .Values.domain }}-{{ .Values.srvName }}
 spec:
-  host: {{ .Values.srvName }} 
+  host: {{ .Values.domain }}-{{ .Values.srvName }}
   subsets:
   - name: release
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: {{ .Values.srvName }} 
+  name: {{ .Values.domain }}-{{ .Values.srvName }}
   labels:
-    release: {{ .Values.srvName }}
+    release: {{ .Values.domain }}-{{ .Values.srvName }}
 spec:
   selector:
     istio: ingressgateway
