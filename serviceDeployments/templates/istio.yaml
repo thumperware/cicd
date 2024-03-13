@@ -6,7 +6,7 @@ metadata:
     release: {{ .Values.srvName }}-vs
 spec:
   hosts:
-    - {{ .Values.domain}}/{{ .Values.srvName }}/*
+    - "*/{{ .Values.domain}}/{{ .Values.srvName }}/*"
   gateways:
     - {{ .Values.srvName }}-gw
   http:
@@ -44,4 +44,4 @@ spec:
       mode: SIMPLE
       credentialName: cacerts
     hosts:
-    - {{ .Values.domain}}/{{ .Values.srvName }}/*
+    - "*/{{ .Values.domain}}/{{ .Values.srvName }}/*"
