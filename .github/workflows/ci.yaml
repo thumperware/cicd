@@ -5,7 +5,7 @@ on:
     secrets:
       VAULT_TOKEN:
         required: true
-      VAULT_ADDRESS:
+      VAULT_ADDR:
         required: true
       DOMAIN_NAME:
         required: true
@@ -24,7 +24,7 @@ jobs:
         id: import-secrets
         uses: hashicorp/vault-action@v2
         with:
-          url: ${{ secrets.VAULT_ADDRESS }}
+          url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true

@@ -22,7 +22,7 @@ jobs:
     uses: ./.github/workflows/ci.yaml
     secrets:
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-      VAULT_ADDRESS: ${{ secrets.VAULT_ADDR }}
+      VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
       DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
 
   docker-image-push:
@@ -39,7 +39,7 @@ jobs:
         id: import-secrets
         uses: hashicorp/vault-action@v2
         with:
-          url: ${{ secrets.VAULT_ADDRESS }}
+          url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true
@@ -98,7 +98,7 @@ jobs:
         id: import-secrets
         uses: hashicorp/vault-action@v2
         with:
-          url: ${{ secrets.VAULT_ADDRESS }}
+          url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true
@@ -148,7 +148,7 @@ jobs:
         id: import-secrets
         uses: hashicorp/vault-action@v2
         with:
-          url: ${{ secrets.VAULT_ADDRESS }}
+          url: ${{ secrets.VAULT_ADDR }}
           token: ${{ secrets.VAULT_TOKEN }}
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true
