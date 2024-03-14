@@ -27,9 +27,10 @@ jobs:
           url: ${{ secrets.VAULT_ADDRESS }}
           token: ${{ secrets.VAULT_TOKEN }}
           # Temporary skip tls verification for testing purposes
+          path: secrets
           tlsSkipVerify: true
           secrets: |
-            secrets/secrets/cicd/GITHUBACTION_USERNAME value | GITHUBACTION_USERNAME ;
+            secrets/cicd/GITHUBACTION_USERNAME value | GITHUBACTION_USERNAME ;
             secrets/cicd/GITHUBACTION_TOKEN value | GITHUBACTION_TOKEN ;
 
       - name: Configure git for private modules
