@@ -3,35 +3,13 @@ name: CD workflow
 on:
   workflow_call:
     secrets:
-      PROJECT_ID:
-        required: true
-      DOCKER_REGISTRY_URL:
-        required: true
-      MIGRATION_DATABASE_INSTANCE_URL:
-        required: true
-      DATABASE_INSTANCE_URL:
-        required: true
-      GCP_DB_INSTANCE_NAME:
-        required: true
-      DB_NAME:
-        required: true
-      GCP_CREDENTIALS:
-        required: true
-      GKE_CLUSTER_NAME:
-        required: true
-      GKE_LOCATION:
-        required: true
-      GITHUBACTION_TOKEN:
-        required: true
-      GITHUBACTION_USERNAME:
-        required: true
-      DEPLOYMENT_REPO:
-        required: true
       ENVIRONMENT:
         required: true
       DOMAIN_NAME:
         required: true
       SERVICE_NAME:
+        required: true
+      GCP_CREDENTIALS:
         required: true
       VAULT_ADDR:
         required: true
@@ -43,8 +21,8 @@ jobs:
     name: Build and Unit Tests
     uses: ./.github/workflows/ci.yaml
     secrets:
-      GITHUBACTION_TOKEN: ${{ secrets.GITHUBACTION_TOKEN }}
-      GITHUBACTION_USERNAME: ${{ secrets.GITHUBACTION_USERNAME }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      VAULT_ADDRESS: ${{ secrets.VAULT_ADDR }}
       DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
 
   docker-image-push:
@@ -56,6 +34,20 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDRESS }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          # Temporary skip tls verification for testing purposes
+          tlsSkipVerify: true
+          secrets: |
+            secrets/cicd/GITHUBACTION_USERNAME  value | GITHUBACTION_USERNAME ;
+            secrets/cicd/GITHUBACTION_TOKEN  value | GITHUBACTION_TOKEN ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/PROJECT_ID  value | PROJECT_ID ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/DOCKER_REGISTRY_URL  value | DOCKER_REGISTRY_URL ;
 
         # https://github.com/GitTools/actions/tree/main/docs/examples/github/gitversion
       - name: Install GitVersion
@@ -77,7 +69,7 @@ jobs:
       - name: Login to GAR
         uses: docker/login-action@v2
         with:
-          registry: ${{ secrets.DOCKER_REGISTRY_URL }}
+          registry: ${{ env.DOCKER_REGISTRY_URL }}
           username: _json_key
           password: ${{ secrets.GCP_CREDENTIALS }}
 
@@ -87,10 +79,10 @@ jobs:
           context: .
           file: ./builds/Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }}
+          tags: ${{ env.DOCKER_REGISTRY_URL }}/${{ env.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }}
           build-args: |
-            "GITHUB_USERNAME=${{ secrets.GITHUBACTION_USERNAME }}"
-            "GITHUB_TOKEN=${{ secrets.GITHUBACTION_TOKEN }}"
+            "GITHUB_USERNAME=${{ env.GITHUBACTION_USERNAME }}"
+            "GITHUB_TOKEN=${{ env.GITHUBACTION_TOKEN }}"
 
   db_migration:
     name: Database migration
@@ -101,6 +93,19 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDRESS }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          # Temporary skip tls verification for testing purposes
+          tlsSkipVerify: true
+          secrets: |
+            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/MIGRATION_DATABASE_INSTANCE_URL  value | MIGRATION_DATABASE_INSTANCE_URL ;
+            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/GCP_DB_INSTANCE_NAME  value | GCP_DB_INSTANCE_NAME ;
+            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/DB_NAME  value | DB_NAME ;
 
       - name: Install PSQL-CLI
         run: |
@@ -122,12 +127,12 @@ jobs:
         uses: mattes/gce-cloudsql-proxy-action@v1
         with:
           creds: ${{ secrets.GCP_CREDENTIALS }}
-          instance: ${{ secrets.GCP_DB_INSTANCE_NAME }}
+          instance: ${{ env.GCP_DB_INSTANCE_NAME }}
 
       - name: Run Migration
         run: |
-          psql "${{ secrets.MIGRATION_DATABASE_INSTANCE_URL }}/postgres" -tc "select 1 from pg_database where datname='${{ secrets.DB_NAME }}';" | grep -q 1 || psql "${{ secrets.MIGRATION_DATABASE_INSTANCE_URL }}/postgres" -c "CREATE DATABASE \"${{ secrets.DB_NAME }}\""
-          migrate -path ./deployments/migrations -database "${{ secrets.MIGRATION_DATABASE_INSTANCE_URL }}/${{ secrets.DB_NAME }}?sslmode=disable" -verbose up
+          psql "${{ env.MIGRATION_DATABASE_INSTANCE_URL }}/postgres" -tc "select 1 from pg_database where datname='${{ env.DB_NAME }}';" | grep -q 1 || psql "${{ env.MIGRATION_DATABASE_INSTANCE_URL }}/postgres" -c "CREATE DATABASE \"${{ env.DB_NAME }}\""
+          migrate -path ./deployments/migrations -database "${{ env.MIGRATION_DATABASE_INSTANCE_URL }}/${{ env.DB_NAME }}?sslmode=disable" -verbose up
 
   deploy-staging:
     name: Deploy to staging
@@ -138,6 +143,22 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDRESS }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          # Temporary skip tls verification for testing purposes
+          tlsSkipVerify: true
+          secrets: |
+            secrets/cicd/DEPLOYMENT_REPO  value | DEPLOYMENT_REPO ;
+            secrets/cicd/GITHUBACTION_TOKEN  value | GITHUBACTION_TOKEN ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/PROJECT_ID  value | PROJECT_ID ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/DOCKER_REGISTRY_URL  value | DOCKER_REGISTRY_URL ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/GKE_CLUSTER_NAME  value | GKE_CLUSTER_NAME ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/GKE_LOCATION  value | GKE_LOCATION ;
 
       # https://github.com/GitTools/actions/tree/main/docs/examples/github/gitversion
       - name: Install GitVersion
@@ -159,8 +180,8 @@ jobs:
         name: 'Setup GKE Credentials'
         uses: 'google-github-actions/get-gke-credentials@v1'
         with:
-          cluster_name: '${{ secrets.GKE_CLUSTER_NAME }}'
-          location: '${{ secrets.GKE_LOCATION }}'
+          cluster_name: '${{ env.GKE_CLUSTER_NAME }}'
+          location: '${{ env.GKE_LOCATION }}'
 
       - name: Install Helm
         uses: azure/setup-helm@v3
@@ -168,13 +189,13 @@ jobs:
       - name: Checkout deployment repository
         uses: actions/checkout@v3
         with:
-          repository: ${{ secrets.DEPLOYMENT_REPO }}
-          token: ${{ secrets.GITHUBACTION_TOKEN }}
+          repository: ${{ env.DEPLOYMENT_REPO }}
+          token: ${{ env.GITHUBACTION_TOKEN }}
           path: cicd
 
       - name: Deploy
         run: |
-          helm upgrade --set environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ secrets.DOCKER_REGISTRY_URL }}/${{ secrets.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/serviceDeployments;
+          helm upgrade --set environment=${{ secrets.ENVIRONMENT }},domain=${{ secrets.DOMAIN_NAME }},srvName=${{ secrets.SERVICE_NAME }},vault_addr=${{ secrets.VAULT_ADDR }},vault_token=${{ secrets.VAULT_TOKEN }},dockerImage=${{ env.DOCKER_REGISTRY_URL }}/${{ env.PROJECT_ID }}/${{ secrets.DOMAIN_NAME}}/${{ secrets.SERVICE_NAME }}:v${{ steps.gitversion.outputs.semVer }} --install ${{ secrets.SERVICE_NAME }} ./cicd/serviceDeployments;
 
   tag-release:
     name: Tag the release
