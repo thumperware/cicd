@@ -3,11 +3,9 @@ name: CI workflow
 on:
   workflow_call:
     secrets:
-      GITHUBACTION_TOKEN:
+      VAULT_TOKEN:
         required: true
-      GITHUBACTION_USERNAME:
-        required: true
-      DOMAIN_NAME:
+      VAULT_ADDRESS:
         required: true
 
 jobs:
@@ -20,16 +18,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Import Secrets
+        id: import-secrets
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ secrets.VAULT_ADDRESS }}
+          token: ${{ secrets.VAULT_TOKEN }}
+          # Temporary skip tls verification for testing purposes
+          tlsSkipVerify: true
+          secrets: |
+            secrets/cicd/GITHUBACTION_USERNAME  value | GITHUBACTION_USERNAME ;
+            secrets/cicd/GITHUBACTION_TOKEN  value | GITHUBACTION_TOKEN ;
+
       - name: Configure git for private modules
         env:
-          TOKEN: ${{ secrets.GITHUBACTION_TOKEN }}
+          TOKEN: ${{ env.GITHUBACTION_TOKEN }}
           GOPRIVATE: github.com/${{ secrets.DOMAIN_NAME }}
-        run: git config --global url."https://${{ secrets.GITHUBACTION_USERNAME }}:${{ secrets.GITHUBACTION_TOKEN }}@github.com".insteadOf "https://github.com"
+        run: git config --global url."https://${{ env.GITHUBACTION_USERNAME }}:${{ env.GITHUBACTION_TOKEN }}@github.com".insteadOf "https://github.com"
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.21"
+          go-version: '1.21'
 
       - name: Install Gosec Security Scanner
         run: |
