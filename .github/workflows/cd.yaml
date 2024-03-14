@@ -44,10 +44,10 @@ jobs:
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true
           secrets: |
-            secrets/cicd/GITHUBACTION_USERNAME  value | GITHUBACTION_USERNAME ;
-            secrets/cicd/GITHUBACTION_TOKEN  value | GITHUBACTION_TOKEN ;
-            secrets/${{ secrets.ENVIRONMENT }}/cicd/PROJECT_ID  value | PROJECT_ID ;
-            secrets/${{ secrets.ENVIRONMENT }}/cicd/DOCKER_REGISTRY_URL  value | DOCKER_REGISTRY_URL ;
+            secrets/secrets/cicd/GITHUBACTION_USERNAME value | GITHUBACTION_USERNAME ;
+            secrets/cicd/GITHUBACTION_TOKEN value | GITHUBACTION_TOKEN ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/PROJECT_ID value | PROJECT_ID ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/DOCKER_REGISTRY_URL value | DOCKER_REGISTRY_URL ;
 
         # https://github.com/GitTools/actions/tree/main/docs/examples/github/gitversion
       - name: Install GitVersion
@@ -103,9 +103,9 @@ jobs:
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true
           secrets: |
-            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/MIGRATION_DATABASE_INSTANCE_URL  value | MIGRATION_DATABASE_INSTANCE_URL ;
-            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/GCP_DB_INSTANCE_NAME  value | GCP_DB_INSTANCE_NAME ;
-            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/DB_NAME  value | DB_NAME ;
+            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/MIGRATION_DATABASE_INSTANCE_URL value | MIGRATION_DATABASE_INSTANCE_URL ;
+            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/GCP_DB_INSTANCE_NAME value | GCP_DB_INSTANCE_NAME ;
+            secrets/${{ secrets.ENVIRONMENT }}/${{ secrets.DOMAIN_NAME }}/${{ secrets.SERVICE_NAME }}/DB_NAME value | DB_NAME ;
 
       - name: Install PSQL-CLI
         run: |
@@ -153,12 +153,12 @@ jobs:
           # Temporary skip tls verification for testing purposes
           tlsSkipVerify: true
           secrets: |
-            secrets/cicd/DEPLOYMENT_REPO  value | DEPLOYMENT_REPO ;
-            secrets/cicd/GITHUBACTION_TOKEN  value | GITHUBACTION_TOKEN ;
-            secrets/${{ secrets.ENVIRONMENT }}/cicd/PROJECT_ID  value | PROJECT_ID ;
-            secrets/${{ secrets.ENVIRONMENT }}/cicd/DOCKER_REGISTRY_URL  value | DOCKER_REGISTRY_URL ;
-            secrets/${{ secrets.ENVIRONMENT }}/cicd/GKE_CLUSTER_NAME  value | GKE_CLUSTER_NAME ;
-            secrets/${{ secrets.ENVIRONMENT }}/cicd/GKE_LOCATION  value | GKE_LOCATION ;
+            secrets/cicd/DEPLOYMENT_REPO value | DEPLOYMENT_REPO ;
+            secrets/cicd/GITHUBACTION_TOKEN value | GITHUBACTION_TOKEN ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/PROJECT_ID value | PROJECT_ID ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/DOCKER_REGISTRY_URL value | DOCKER_REGISTRY_URL ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/GKE_CLUSTER_NAME value | GKE_CLUSTER_NAME ;
+            secrets/${{ secrets.ENVIRONMENT }}/cicd/GKE_LOCATION value | GKE_LOCATION ;
 
       # https://github.com/GitTools/actions/tree/main/docs/examples/github/gitversion
       - name: Install GitVersion
