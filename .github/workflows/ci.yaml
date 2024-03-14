@@ -30,7 +30,7 @@ jobs:
           tlsSkipVerify: true
           secrets: |
             secrets/data/cicd/GITHUBACTION_USERNAME value | GITHUBACTION_USERNAME ;
-            secrets/cicd/GITHUBACTION_TOKEN value | GITHUBACTION_TOKEN ;
+            secrets/data/cicd/GITHUBACTION_TOKEN value | GITHUBACTION_TOKEN ;
 
       - name: Configure git for private modules
         env:
