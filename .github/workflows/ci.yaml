@@ -7,6 +7,8 @@ on:
         required: true
       VAULT_ADDRESS:
         required: true
+      DOMAIN_NAME:
+        required: true
 
 jobs:
   build-test:
